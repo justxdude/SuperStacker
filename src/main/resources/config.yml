@@ -1,0 +1,21 @@
+SpawnerItemName: '&6&l%name% &eSpawner'
+SpawnerPhysicalName: '&6&l%name% &eSpawner x%amount%'
+EntityName: '&6&l%name% &ex%amount%'
+Mobcap: 500
+Spawnercap: 300
+WitherRoseMultiplier: 1
+
+
+mobdrops:
+  ELDER_GUARDIAN:
+    - 1,PRISMARINE_SHARD,2,7
+    - 1,PRISMARINE_CRYSTALS,2,7
+    - 0.25,SALMON,1,1
+    - 0.25,PUFFERFISH,0,1
+    - 0.25,COD,1,1
+  ENDERMITE:
+    - 1,CHORUS_FLOWER,0,1
+
+SpawnerLore:
+  ZOMBIE:
+    - "&7Requires Darkness to spawn"
