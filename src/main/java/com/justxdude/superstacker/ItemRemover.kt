@@ -18,7 +18,9 @@ class ItemRemover {
                     Item::class.java
                 )
             )
-            // optimise this by having it check 3 items with this one call instead of 1 as this is the most hurtful operation ^
+            // optimize this
+            // by having
+            // it check 3 items with this one call instead of 1 as this is the most hurtful operation ^
             if (all.isEmpty()) return@Runnable
             val discovered = all[ThreadLocalRandom.current().nextInt(all.size)]
             val around = getAround(discovered.location, 10)
@@ -26,13 +28,13 @@ class ItemRemover {
                 val clearmobs = around.stream().noneMatch { entity: Entity? -> entity is Player }
                 val toClear = filterRemovable(around, if (clearmobs) stackableMobFilter else ArrayList())
                 purge(toClear)
-                get(SuperStacker::class.java).logger.info("Random Entity Cleaner Removed a cluster of " + toClear.size + " entities at " + discovered.location.x + discovered.location.y + discovered.location.z)
+                get().logger.info("Random Entity Cleaner Removed a cluster of " + toClear.size + " entities at " + discovered.location.x + discovered.location.y + discovered.location.z)
             }
         }, 20, 20)
     }
 
     private val worldForRemoval: World?
-        private get() = if (Bukkit.getWorld("SuperiorWorld") == null) Bukkit.getWorld("world") else Bukkit.getWorld("SuperiorWorld")
+        get() = if (Bukkit.getWorld("world_island") == null) Bukkit.getWorld("world_island") else Bukkit.getWorld("world_island")
 
     companion object {
         private fun qualifies(item: Item, numSurrounding: Int): Boolean {

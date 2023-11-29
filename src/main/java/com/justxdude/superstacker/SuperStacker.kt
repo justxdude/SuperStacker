@@ -1,5 +1,6 @@
 package com.justxdude.superstacker
 
+import com.justxdude.superstacker.commands.GiveSpawnerCommand
 import com.justxdude.superstacker.listeners.AmbientStackHandler
 import com.justxdude.superstacker.listeners.EntityListener
 import com.justxdude.superstacker.listeners.StackListener
@@ -34,6 +35,9 @@ class SuperStacker : JavaPlugin() {
         saveDefaultConfig()
         Settings.setup()
         loadData()
+
+        // Commands
+        GiveSpawnerCommand()
 
         availableTypes = Arrays.stream(EntityType.entries.toTypedArray())
             .filter { e: EntityType ->
@@ -139,7 +143,7 @@ class SuperStacker : JavaPlugin() {
         var registeredLootTables: HashMap<EntityType, LootTable>? = null
         lateinit var instance: SuperStacker
         @JvmStatic
-        fun get(java: Class<SuperStacker>): SuperStacker {
+        fun get(): SuperStacker {
             return getPlugin(SuperStacker::class.java)
         }
 

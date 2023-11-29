@@ -8,7 +8,7 @@ import java.util.*
 import java.util.stream.Collectors
 
 object entities {
-    private val plugin: SuperStacker = SuperStacker.get(SuperStacker::class.java)
+    private val plugin: SuperStacker = SuperStacker.get()
     private fun getNearby(e: LivingEntity): MutableList<LivingEntity> {
         return e.getNearbyEntities(8.0, 8.0, 8.0).stream()
             .filter { x: Entity -> x.type == e.type && (x as LivingEntity).health > 0 && x.isValid() }

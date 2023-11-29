@@ -23,15 +23,16 @@ object AmbientStackHandler {
                 val toRemove: MutableList<UUID> = ArrayList()
                 for (uuid in trackedStacks) {
                     if (toRemove.contains(uuid)) continue
-                    val e: LivingEntity = Bukkit.getEntity(uuid) as LivingEntity
-                    if (e == null || !e.isValid()) {
+                    val e = Bukkit.getEntity(uuid)
+                    if (e is LivingEntity && e.isValid) {
+                        // Your logic with the valid LivingEntity
+                        toRemove.addAll(entities.stackNearby(e))
+                    } else {
                         toRemove.add(uuid)
-                        continue
                     }
-                    toRemove.addAll(entities.stackNearby(e))
                 }
-                trackedStacks.removeAll(toRemove)
+                trackedStacks.removeAll(toRemove.toSet())
             }
-        }.runTaskTimer(SuperStacker.get(SuperStacker::class.java), 600, 600)
+        }.runTaskTimer(SuperStacker.get(), 600, 600)
     }
 }

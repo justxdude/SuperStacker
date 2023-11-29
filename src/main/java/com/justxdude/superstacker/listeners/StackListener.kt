@@ -1,8 +1,6 @@
 package com.justxdude.superstacker.listeners
 
 import com.justxdude.superstacker.SuperStacker
-import com.justxdude.superstacker.customevents.StackDeathDropItemEvent
-import com.justxdude.superstacker.customevents.StackDeathEvent
 import com.justxdude.superstacker.objects.EntityStack
 import com.justxdude.superstacker.objects.EntityStack.Companion.isStacked
 import com.justxdude.superstacker.objects.SpawnerStack
@@ -22,6 +20,7 @@ import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.block.BlockPlaceEvent
+import org.bukkit.event.entity.CreatureSpawnEvent
 import org.bukkit.event.entity.EntityDamageEvent
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause
 import org.bukkit.event.entity.EntityDeathEvent
@@ -48,9 +47,11 @@ class StackListener(plugin: SuperStacker?) : Listener {
             val killedStack = EntityStack(killed)
             val cause = killed.lastDamageCause!!.cause
             val amountToKill = if (cause == DamageCause.FALL) killedStack.amount else 1
+
             val event = StackDeathEvent(killedStack, amountToKill, cause, killer)
             // Call the event
             Bukkit.getServer().pluginManager.callEvent(event)
+
             val hasLootTable = SuperStacker.registeredLootTables!!.containsKey(type)
             val customDrops = if (hasLootTable) SuperStacker.registeredLootTables!![type]!!
                 .getDrops(looting, fireAspect, event.amountToKill) else e.drops
@@ -60,6 +61,7 @@ class StackListener(plugin: SuperStacker?) : Listener {
             }
             // Call event
             Bukkit.getServer().pluginManager.callEvent(StackDeathDropItemEvent(e.drops))
+
             if (killedStack.amount > event.amountToKill) killedStack.respawnEntity(killedStack.amount - event.amountToKill)
         }
     }
@@ -75,6 +77,7 @@ class StackListener(plugin: SuperStacker?) : Listener {
         var mobAmount: Int =
             u.getRandomNumberBetween(ceil(spawnerAmount * 0.75).toInt(), ceil(spawnerAmount * 1.75).toInt())
         if (mobAmount < 1) mobAmount = 1
+
         val spawned = e.entity as LivingEntity
         val spawnStack = EntityStack(spawned)
         spawnStack.createStack()
@@ -101,17 +104,14 @@ class StackListener(plugin: SuperStacker?) : Listener {
             val placed = SpawnerStack(e.block, SpawnerUtil.getType(holding))
             if (e.isCancelled) return
             if (existing.isStack) {
-                if (existing.spawnerType == placed.spawnerType) {
-                    if (existing.amount < SuperStacker.get(SuperStacker::class.java).spawnerCap) {
-                        val amount = if (e.player.isSneaking) Math.min(
-                            holding.amount,
-                            SuperStacker.get(SuperStacker::class.java).spawnerCap - existing.amount
-                        ) else 1
-                        e.isCancelled = true
-                        if (e.player.gameMode != GameMode.CREATIVE) holding.amount = holding.amount - amount
-                        existing.addSpawners(amount)
-                    }
-                }
+                if (existing.spawnerType != placed.spawnerType) return
+                if (existing.amount > SuperStacker.get().spawnerCap) return
+                val amount = if (e.player.isSneaking) holding.amount.coerceAtMost(SuperStacker.instance.spawnerCap - existing.amount) else 1
+
+                e.isCancelled = true
+
+                if (e.player.gameMode != GameMode.CREATIVE) holding.amount = holding.amount - amount
+                existing.addSpawners(amount)
             } else {
                 var amount = 1
                 if (e.player.isSneaking) {
@@ -152,6 +152,20 @@ class StackListener(plugin: SuperStacker?) : Listener {
         if (e.clickedBlock != null && e.clickedBlock!!.type == Material.SPAWNER && e.item != null && e.item!!.type.toString()
                 .contains("_SPAWN_EGG")
         ) e.isCancelled = true
+    }
+
+    // Natural spawning
+
+    @EventHandler
+    fun onEntitySpawn(event: CreatureSpawnEvent) {
+        val spawned = event.entity
+        val spawnStack = EntityStack(spawned)
+        spawnStack.createStack()
+        val mobuuid = spawned.uniqueId
+        val stacked: List<UUID> = entities.stackNearby(spawnStack.entity)
+        if (!stacked.contains(mobuuid) && SPAWN_IN_WALLS.contains(spawned.type)) {
+            spawned.teleport(setToMiddleOfBlock(spawned.location))
+        }
     }
 
     companion object {

@@ -1,4 +1,4 @@
-package com.justxdude.superstacker.customevents
+package com.justxdude.superstacker.listeners
 
 import org.bukkit.inventory.ItemStack
 

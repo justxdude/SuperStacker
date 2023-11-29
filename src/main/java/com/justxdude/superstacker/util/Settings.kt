@@ -10,8 +10,8 @@ object Settings {
 	var entityname: String? = null
     var spawnerPhysicalName: String? = null
     fun setup() {
-        c = SuperStacker.get(SuperStacker::class.java).config
-        spawnerItemName = c!!.getString("SpawnerItemName")
+        c = SuperStacker.get().config
+        spawnerItemName = c?.getString("SpawnerItemName") ?: "DefaultName"
         entityname = c!!.getString("EntityName")
         spawnerPhysicalName = c!!.getString("SpawnerPhysicalName")
     }

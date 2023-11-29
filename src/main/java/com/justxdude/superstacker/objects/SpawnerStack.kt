@@ -4,6 +4,7 @@ import com.justxdude.superstacker.SuperStacker
 import com.justxdude.superstacker.util.Settings
 import com.justxdude.superstacker.util.SpawnerUtil
 import com.justxdude.superstacker.util.u
+import org.bukkit.GameMode
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.block.Block
@@ -18,18 +19,37 @@ import org.bukkit.persistence.PersistentDataType
 import org.bukkit.util.Vector
 import java.util.stream.Collectors
 
+
 class SpawnerStack @JvmOverloads constructor(
     private val b: Block, type: EntityType? = if (isSpawner(b)) (b.state as CreatureSpawner).spawnedType else null) {
     private var hologram: ArmorStand? = null
-    lateinit var spawnerType: EntityType
-    lateinit var spawner: CreatureSpawner
-    val hologramLocation: Location
+    var spawnerType: EntityType? = type
+    private var spawner: CreatureSpawner? = spawnerFromBlock
+    init {
+        try {
+            if (isStack) hologram = b.world.getNearbyEntities(hologramSearchLocation, 0.5, 0.5, 0.5).stream()
+                .filter { i: Entity ->
+                    i.type == EntityType.ARMOR_STAND && i.persistentDataContainer
+                        .has(
+                            SpawnerUtil.hologramKey,
+                            PersistentDataType.STRING
+                        ) && i.persistentDataContainer.get(
+                        SpawnerUtil.hologramKey,
+                        PersistentDataType.STRING
+                    ) == spawnerType.toString()
+                }
+                .collect(Collectors.toList())[0] as ArmorStand
+        } catch (e: java.lang.IndexOutOfBoundsException) {
+            hologram = null
+        }
+    }
+    private val hologramLocation: Location
         get() {
             val l = location
             l.add(Vector(0.5, 0.0, 0.5))
             return l
         }
-    val hologramSearchLocation: Location
+    private val hologramSearchLocation: Location
         get() {
             val l = hologramLocation
             l.add(Vector(0.0, 0.5, 0.0))
@@ -45,24 +65,22 @@ class SpawnerStack @JvmOverloads constructor(
         get() = b.location
 
     fun getItem(amount: Int): ItemStack {
-        return SpawnerUtil.getSpawner(spawnerType, amount)
+        return SpawnerUtil.getSpawner(spawnerType!!, amount)
     }
 
-    val isStack: Boolean
-        get() = isSpawner() && pDC.has(SpawnerUtil.containerKey, PersistentDataType.INTEGER)
+    val isStack: Boolean get() = isSpawner() && pDC.has(SpawnerUtil.containerKey, PersistentDataType.INTEGER)
 
     private fun isSpawner(): Boolean {
         return b.type == Material.SPAWNER
     }
 
-    private val pDC: PersistentDataContainer
-        private get() = getSpawnerObject()!!.persistentDataContainer
+    private val pDC: PersistentDataContainer get() = getSpawnerObject()!!.persistentDataContainer
 
     fun createStack(amount: Int) {
         if (!isStack) {
-            spawner.spawnedType = spawnerType
-            spawner.requiredPlayerRange = 32
-            spawner.spawnCount = 1
+            spawner?.spawnedType = spawnerType
+            spawner?.requiredPlayerRange = 32
+            spawner?.spawnCount = 1
             createHologram()
             this.amount = amount
         }
@@ -98,20 +116,20 @@ class SpawnerStack @JvmOverloads constructor(
         try {
             hologram!!.remove()
         } catch (e: NullPointerException) {
-            SuperStacker.get(SuperStacker::class.java).logger.severe("Failed to remove spawner hologram at ...")
+            SuperStacker.get().logger.severe("Failed to remove spawner hologram at ...")
         }
     }
 
     fun breakSpawner(player: Player) {
-        val amount = if (player.isSneaking) Math.min(64, amount) else 1
+        val amount = if (player.isSneaking) 64.coerceAtMost(amount) else 1
         removeSpawners(amount)
-        player.giveOrDropItem(getItem(amount))
+        if(player.gameMode != GameMode.CREATIVE) player.giveOrDropItem(getItem(amount))
     }
 
     init {
         if (isSpawner()) {
-            spawnerType = type!!
-            spawner = spawnerFromBlock!!
+            spawnerType = type ?: EntityType.PIG // Default EntityType
+            spawner = spawnerFromBlock ?: throw IllegalStateException("Spawner block expected")
         }
         try {
             if (isStack) hologram = b.world.getNearbyEntities(hologramSearchLocation, 0.5, 0.5, 0.5).stream()
@@ -147,7 +165,7 @@ class SpawnerStack @JvmOverloads constructor(
     fun updateHologram() {
         try {
             hologram!!.customName = u.hc(
-                Settings.spawnerPhysicalName!!.replace("%name%", SpawnerUtil.getName(spawnerType)!!).replace("%amount%", u.dc(amount))
+                Settings.spawnerPhysicalName!!.replace("%name%", SpawnerUtil.getName(spawnerType!!)!!).replace("%amount%", u.dc(amount))
             )
         } catch (e: NullPointerException) {
         }

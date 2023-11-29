@@ -11,14 +11,14 @@ import org.bukkit.inventory.meta.BlockStateMeta
 
 object SpawnerUtil {
     var hologramKey: NamespacedKey =
-        NamespacedKey(SuperStacker.get(SuperStacker::class.java), "Hologram")
+        NamespacedKey(SuperStacker.get(), "Hologram")
     var containerKey: NamespacedKey =
-        NamespacedKey(SuperStacker.get(SuperStacker::class.java), "StackedSpawner")
-    private val plugin: SuperStacker = SuperStacker.get(SuperStacker::class.java)
+        NamespacedKey(SuperStacker.get(), "StackedSpawner")
+    private val plugin: SuperStacker = SuperStacker.get()
     fun getSpawner(type: EntityType, amount: Int): ItemStack {
         val item = ItemStack(Material.SPAWNER, amount)
-        val meta = item.itemMeta
-        meta!!.setDisplayName(u.hc(Settings.spawnerItemName!!.replace("%name%".toRegex(), getName(type)!!)))
+        val meta = item.itemMeta as? BlockStateMeta ?: throw IllegalStateException("Expected BlockStateMeta")
+        meta.setDisplayName(u.hc(Settings.spawnerItemName!!.replace("%name%".toRegex(), getName(type)!!)))
         if (plugin.hasSpawnerLoreFor(type)) meta.lore = plugin.getSpawnerLoreFor(type)
         val cs = (meta as BlockStateMeta?)!!.blockState as CreatureSpawner
         cs.spawnedType = type

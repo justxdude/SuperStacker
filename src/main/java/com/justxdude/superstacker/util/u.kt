@@ -32,9 +32,7 @@ object u {
         return matcher.appendTail(buffer).toString()
     }
 
-    fun hc(s: String?): String? {
-        return if (s == null) null else translateHexColorCodes(cc(s))
-    }
+    fun hc(s: String?): String? = s?.let { translateHexColorCodes(cc(it)) }
 
     fun cc(s: String?): String {
         return ChatColor.translateAlternateColorCodes('&', s!!)

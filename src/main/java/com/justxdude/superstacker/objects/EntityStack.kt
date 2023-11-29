@@ -101,7 +101,7 @@ class EntityStack(var entity: LivingEntity) {
 
     companion object {
         private val amountKey: NamespacedKey =
-            NamespacedKey(SuperStacker.get(SuperStacker::class.java), "StackAmount")
+            NamespacedKey(SuperStacker.get(), "StackAmount")
 
         /**
          * @param e
@@ -141,10 +141,10 @@ class EntityStack(var entity: LivingEntity) {
             val type = e.type
             val m = e as Mob
             // Make it so sweeping edge doesn't carry mobs away & increase kill speed
-            e.setLastDamage(100.0)
+            e.setLastDamage(0.0)
             e.setMaximumNoDamageTicks(10)
             e.setNoDamageTicks(6)
-            m.isAware = false
+            m.isAware = true
             e.setCanPickupItems(false)
             if (maxHealths.containsKey(type)) setMaxHealth(e, maxHealths[type]!!)
             if (e is Ageable && !e.isAdult) e.setAdult()

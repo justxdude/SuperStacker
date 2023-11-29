@@ -34,16 +34,6 @@ class EntityListener(plugin: SuperStacker) : Listener {
             }
         }
     }
-
-    @EventHandler
-    fun EntityAttack(e: EntityDamageByEntityEvent) {
-        if (e.entity !is Player || e.damager !is LivingEntity) return
-        val stack = EntityStack((e.damager as LivingEntity))
-        if (stack.isStacked) {
-            e.isCancelled = true
-        }
-    }
-
     @EventHandler
     fun silverfishBurrowListener(e: EntityChangeBlockEvent) {
         val type = e.entityType
